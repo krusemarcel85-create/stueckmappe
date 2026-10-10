@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121214">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Stückmappe</title>
+<style>
+:root{
+  --bg:#121214;--panel:#1c1c20;--panel2:#26262b;--line:#34343c;
+  --text:#ececf0;--muted:#9a9aa6;--accent:#e0a33a;--accent-text:#1a1206;
+  --danger:#e0574f;--note:#5b9bd5;--pdf:#d9634f;--photo:#4fae7a;--shadow:rgba(0,0,0,.4);
+}
+html[data-theme="light"]{
+  --bg:#f4f3ef;--panel:#ffffff;--panel2:#ecebe6;--line:#d8d6cf;
+  --text:#1d1d1f;--muted:#6b6b73;--accent:#b5781a;--accent-text:#ffffff;
+  --danger:#c0392b;--note:#2f6fb0;--pdf:#b8442f;--photo:#2e8a57;--shadow:rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:17px;line-height:1.4}
+body.noscroll{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+
+/* Kopfzeile */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;padding:8px 10px;
+  background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{font-weight:700;letter-spacing:.3px;margin-right:10px;white-space:nowrap;color:var(--accent)}
+.top select{flex:1;min-width:0;height:44px;padding:0 10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.top .btn{margin-left:8px}
+
+.btn{display:inline-block;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel2);font-weight:600;white-space:nowrap}
+.btn:active{opacity:.7}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.btn.danger{color:var(--danger)}
+.btn.icon{width:44px;padding:0;font-size:22px;line-height:42px}
+.btn.icon.on{border-color:var(--accent);color:var(--accent)}
+.btn.small{min-height:38px;padding:0 12px;font-size:15px;font-weight:500}
+
+main{max-width:960px;margin:0 auto;padding:14px 12px 80px}
+.playhead h1{margin:4px 0 2px;font-size:26px;word-break:break-word}
+.meta{color:var(--muted);font-size:15px}
+.savebar{font-size:14px;color:var(--photo);margin-top:6px}
+.savebar .btn{margin-left:10px;min-height:34px;vertical-align:middle}
+.savebar.remind{color:var(--accent)}
+.savebar.warn{color:var(--danger);font-weight:600}
+
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;margin:14px 0 6px}
+.toolbar .btn{margin:0 8px 8px 0}
+.toolbar input[type=search]{flex:1;min-width:180px;height:44px;margin:0 0 8px 0;padding:0 12px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px}
+
+.chips{margin:4px 0 12px}
+.chip{display:inline-block;min-height:36px;padding:0 14px;margin:0 6px 6px 0;border-radius:18px;
+  border:1px solid var(--line);background:transparent;color:var(--muted);font-size:15px}
+.chip.on{background:var(--panel2);color:var(--text);border-color:var(--accent)}
+
+/* Karten */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;
+  box-shadow:0 1px 3px var(--shadow);overflow:hidden}
+.card.note{border-left:4px solid var(--note)}
+.card.pdf{border-left:4px solid var(--pdf)}
+.card-main{padding:12px 14px;cursor:pointer}
+.card-main:active{background:var(--panel2)}
+.card-top{font-size:13px;color:var(--muted);margin-bottom:4px}
+.card-top>*{margin-right:8px}
+.badge{display:inline-block;padding:1px 8px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.3px}
+.b-note{background:var(--note);color:#fff}
+.b-pdf{background:var(--pdf);color:#fff}
+.b-cat{background:var(--panel2);color:var(--text);font-weight:600}
+.card-title{font-size:18px;font-weight:600;word-break:break-word}
+.snippet{color:var(--muted);font-size:15px;margin-top:3px;word-break:break-word}
+.card.photo{border-left:4px solid var(--photo)}
+.card.photo .card-main{display:flex;align-items:center}
+.thumb{width:84px;height:84px;flex-shrink:0;margin-right:12px;border-radius:8px;background:var(--panel2);
+  background-size:cover;background-position:center}
+.card-text{flex:1;min-width:0}
+.b-photo{background:var(--photo);color:#fff}
+.card-acts{padding:0 10px 10px 14px}
+.card-acts .btn{margin:0 6px 0 0}
+
+.hint{color:var(--muted);text-align:center;padding:40px 10px}
+.empty{text-align:center;padding:60px 16px}
+.empty h2{margin:0 0 8px}
+.empty p{color:var(--muted);margin:0 0 20px}
+
+/* Menü */
+.menu{display:none;position:fixed;right:10px;top:62px;max-height:calc(100% - 80px);overflow:auto;z-index:30;min-width:250px;background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px var(--shadow);padding:6px}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:left;min-height:46px;padding:0 14px;background:none;border:0;border-radius:8px}
+.menu button:active{background:var(--panel2)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+.menu .danger{color:var(--danger)}
+
+/* Overlays */
+.overlay{display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;background:var(--bg);flex-direction:column}
+.overlay.open{display:flex}
+.bar{display:flex;align-items:center;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+.bar .grow{flex:1;min-width:0;padding:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.bar .btn{margin-left:6px}
+.status{color:var(--muted);font-size:14px;font-weight:400}
+
+.ed-body{flex:1;display:flex;flex-direction:column;padding:12px;max-width:960px;width:100%;margin:0 auto;min-height:0}
+.ed-body input{height:48px;padding:0 12px;margin-bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+#eTitle{font-size:20px;font-weight:600}
+.ed-body textarea{flex:1;min-height:200px;padding:12px;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;resize:none;font-size:17px;line-height:1.5}
+
+.v-body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;padding:8px;background:#55555c}
+html[data-theme="light"] .v-body{background:#9a9aa0}
+#vCanvas{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.4);display:inline-block}
+.v-msg{color:#fff;padding:40px 16px;font-size:17px}
+.v-msg .btn{margin-top:14px}
+.v-foot{display:flex;align-items:center;justify-content:center;padding:8px;background:var(--panel);border-top:1px solid var(--line)}
+.v-foot .btn{margin:0 4px}
+#vPage{min-width:90px}
+
+.p-body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#000;display:flex;align-items:center;justify-content:center}
+.p-body img{max-width:100%;max-height:100%;display:block}
+.p-body.full{display:block;text-align:center}
+.p-body.full img{max-width:none;max-height:none;display:inline-block}
+.p-foot{padding:8px 10px;background:var(--panel);border-top:1px solid var(--line)}
+.p-nav{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.p-nav .btn{margin:0 6px}
+#pCount{min-width:80px;text-align:center;color:var(--muted)}
+#pCaption{width:100%;height:46px;padding:0 12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+
+.dlg-back{display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:90;background:rgba(0,0,0,.55);
+  align-items:center;justify-content:center;padding:16px}
+.dlg-back.open{display:flex}
+.dlg{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.dlg h3{margin:0 0 10px;font-size:20px}
+.dlg p{margin:0 0 14px;color:var(--muted);white-space:pre-line}
+.dlg input{width:100%;height:48px;padding:0 12px;margin-bottom:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.dlg-btns{text-align:right}
+.dlg-btns .btn{margin-left:8px}
+.btn.danger-fill{background:var(--danger);border-color:var(--danger);color:#fff}
+
+.toast{position:fixed;left:50%;bottom:24px;z-index:99;max-width:90%;padding:12px 18px;border-radius:10px;
+  background:var(--text);color:var(--bg);font-size:15px;opacity:0;pointer-events:none;
+  -webkit-transform:translateX(-50%);transform:translateX(-50%);transition:opacity .2s}
+.toast.show{opacity:1}
+
+.fatal{display:none;margin:20px auto;max-width:640px;padding:16px;border:2px solid var(--danger);border-radius:12px;background:var(--panel)}
+.fatal h3{margin:0 0 8px;color:var(--danger)}
+.hidden-input{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+@media (max-width:520px){
+  .brand{display:none}
+  .playhead h1{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="brand">🎭 Stückmappe</span>
+  <select id="playSel" aria-label="Stück wählen"></select>
+  <button class="btn icon primary" id="btnNewPlay" type="button" title="Neues Stück">＋</button>
+  <button class="btn icon" id="btnFs" type="button" title="Vollbild">⛶</button>
+  <button class="btn icon" id="btnMenu" type="button" title="Menü">⋮</button>
+</header>
+
+<div class="menu" id="menu">
+  <button type="button" data-act="rename">✏️ Stück umbenennen</button>
+  <button type="button" data-act="delete" class="danger">🗑️ Stück löschen</button>
+  <hr>
+  <button type="button" data-act="exportOne">💾 Dieses Stück sichern</button>
+  <button type="button" data-act="exportAll">💾 Alles sichern</button>
+  <button type="button" data-act="import">📂 Sicherung laden</button>
+  <hr>
+  <button type="button" data-act="theme">🌓 Hell / Dunkel</button>
+  <button type="button" data-act="info">ℹ️ Speicher &amp; Sicherung</button>
+</div>
+
+<div class="fatal" id="fatal">
+  <h3>⚠ Nur vorübergehender Speicher</h3>
+  <p>Dieser Browser erlaubt hier keinen dauerhaften Speicher. Die App funktioniert, aber alles geht verloren, sobald du die Seite schließt. Das passiert oft in Datei-Vorschauen oder wenn die Datei direkt aus dem Download-Ordner geöffnet wird.</p>
+  <p>Lösung: Datei in Chrome über eine Web-Adresse öffnen (z.&nbsp;B. eigener Server) oder einen anderen Browser probieren. Bis dahin: vor dem Schließen „Alles sichern“.</p>
+  <p class="meta">Technische Meldung: <span id="fatalMsg"></span></p>
+</div>
+
+<main>
+  <div class="empty" id="empty" style="display:none">
+    <h2>Noch keine Stücke</h2>
+    <p>Lege dein erstes Stück an. Danach kannst du Notizen schreiben und PDFs hochladen.</p>
+    <button class="btn primary" id="btnFirstPlay" type="button">＋ Erstes Stück anlegen</button>
+  </div>
+
+  <div id="playView" style="display:none">
+    <div class="playhead">
+      <h1 id="playTitle"></h1>
+      <div class="meta" id="playMeta"></div>
+      <div class="savebar" id="saveBar"></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" id="btnNewNote" type="button">＋ Notiz</button>
+      <button class="btn primary" id="btnAddPdf" type="button">＋ PDF</button>
+      <button class="btn primary" id="btnCamera" type="button">📷 Kamera</button>
+      <button class="btn" id="btnGallery" type="button">🖼️ Galerie</button>
+      <input type="search" id="search" placeholder="Suchen …" autocomplete="off">
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip on" type="button" data-f="all">Alle</button>
+      <button class="chip" type="button" data-f="note">Notizen</button>
+      <button class="chip" type="button" data-f="pdf">PDFs</button>
+      <button class="chip" type="button" data-f="photo">Fotos</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</main>
+
+<input type="file" id="pdfInput" class="hidden-input" accept="application/pdf,.pdf" multiple>
+<input type="file" id="importInput" class="hidden-input" accept="application/json,.json">
+<input type="file" id="cameraInput" class="hidden-input" accept="image/*" capture="environment">
+<input type="file" id="galleryInput" class="hidden-input" accept="image/*" multiple>
+
+<!-- Foto-Ansicht -->
+<div class="overlay" id="photo">
+  <div class="bar">
+    <button class="btn" type="button" id="pBack">‹ Zurück</button>
+    <span class="grow status" id="pStatus"></span>
+    <button class="btn" type="button" id="pSave">Speichern</button>
+    <button class="btn danger" type="button" id="pDelete">Löschen</button>
+  </div>
+  <div class="p-body" id="pBody"><img id="pImg" alt=""></div>
+  <div class="p-foot">
+    <div class="p-nav">
+      <button class="btn icon" type="button" id="pPrev">‹</button>
+      <span id="pCount"></span>
+      <button class="btn icon" type="button" id="pNext">›</button>
+    </div>
+    <input id="pCaption" type="text" placeholder="Beschreibung (z. B. Lichtstimmung Szene 3)">
+  </div>
+</div>
+
+<!-- Notiz-Editor -->
+<div class="overlay" id="editor">
+  <div class="bar">
+    <button class="btn" type="button" id="eBack">‹ Zurück</button>
+    <span class="grow status" id="eStatus"></span>
+    <button class="btn danger" type="button" id="eDelete">Löschen</button>
+  </div>
+  <div class="ed-body">
+    <input id="eTitle" type="text" placeholder="Titel">
+    <input id="eCat" type="text" placeholder="Kategorie (z. B. Licht, Ton, Probe)" list="catList">
+    <datalist id="catList"></datalist>
+    <textarea id="eText" placeholder="Notiz …"></textarea>
+  </div>
+</div>
+
+<!-- PDF-Ansicht -->
+<div class="overlay" id="viewer">
+  <div class="bar">
+    <button class="btn" type="button" id="vBack">‹ Zurück</button>
+    <span class="grow" id="vTitle"></span>
+    <button class="btn" type="button" id="vExt">Extern</button>
+  </div>
+  <div class="v-body" id="vBody">
+    <canvas id="vCanvas"></canvas>
+    <div class="v-msg" id="vMsg"></div>
+  </div>
+  <div class="v-foot">
+    <button class="btn icon" type="button" id="vPrev">‹</button>
+    <button class="btn" type="button" id="vPage">– / –</button>
+    <button class="btn icon" type="button" id="vNext">›</button>
+    <button class="btn icon" type="button" id="vOut">−</button>
+    <button class="btn small" type="button" id="vFit">Breite</button>
+    <button class="btn icon" type="button" id="vIn">+</button>
+  </div>
+</div>
+
+<!-- Dialog -->
+<div class="dlg-back" id="dlg">
+  <div class="dlg">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgMsg"></p>
+    <input id="dlgInput" type="text" autocomplete="off">
+    <div class="dlg-btns">
+      <button class="btn" type="button" id="dlgCancel">Abbrechen</button>
+      <button class="btn primary" type="button" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var DB_NAME = 'stueckmappe', DB_VER = 1, db = null;
+  /* App-Version: PDF-Leser liegt mit im Paket, funktioniert also offline */
+  var PDFJS_SRC = 'pdf.min.js';
+  var PDFJS_WORKER = 'pdf.worker.min.js';
+  var DEFAULT_CATS = ['Licht', 'Ton', 'Bühne', 'Requisite', 'Kostüm', 'Maske', 'Regie', 'Probe', 'Vorstellung', 'Technik'];
+
+  var state = { plays: [], current: null, items: [], filter: 'all', q: '' };
+
+  /* ---------- Helfer ---------- */
+  function $(id) { return document.getElementById(id); }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+  function btn(label, fn, cls) { var b = el('button', cls || 'btn small', label); b.type = 'button'; b.onclick = fn; return b; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtDate(ts) { var d = new Date(ts); return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function fmtTime(ts) { var d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function fmtSize(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return Math.round(b / 1024) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function errMsg(e) { return (e && (e.message || e.name)) || String(e); }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.className = 'toast show';
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = 'toast'; }, 2800);
+  }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+  /* ---------- Eigene Dialoge (statt prompt/confirm/alert, die manche Browser blockieren) ---------- */
+  var D = { res: null, hasInput: false };
+  function dialog(o) {
+    if (D.res) closeDialog(false);
+    return new Promise(function (res) {
+      D.res = res; D.hasInput = o.input !== undefined;
+      $('dlgTitle').textContent = o.title || '';
+      $('dlgMsg').textContent = o.message || '';
+      $('dlgMsg').style.display = o.message ? '' : 'none';
+      var inp = $('dlgInput');
+      inp.style.display = D.hasInput ? '' : 'none';
+      inp.type = o.number ? 'number' : 'text';
+      inp.value = D.hasInput ? String(o.input) : '';
+      $('dlgOk').textContent = o.ok || 'OK';
+      $('dlgOk').className = 'btn ' + (o.danger ? 'danger-fill' : 'primary');
+      $('dlgCancel').style.display = o.alert ? 'none' : '';
+      $('dlg').className = 'dlg-back open';
+      if (D.hasInput) setTimeout(function () { try { inp.focus(); inp.select(); } catch (e) {} }, 60);
+    });
+  }
+  function closeDialog(ok) {
+    var r = D.res; D.res = null;
+    $('dlg').className = 'dlg-back';
+    try { $('dlgInput').blur(); } catch (e) {}
+    if (!r) return;
+    if (!ok) r(null); else r(D.hasInput ? $('dlgInput').value : true);
+  }
+  function askText(title, value, ok) {
+    return dialog({ title: title, input: value || '', ok: ok || 'OK' })
+      .then(function (v) { return v === null ? null : (String(v).trim() || null); });
+  }
+  function askConfirm(title, message, ok) {
+    return dialog({ title: title, message: message, ok: ok || 'Löschen', danger: true }).then(function (v) { return !!v; });
+  }
+  function showAlert(title, message) { return dialog({ title: title, message: message, alert: true }); }
+
+  /* ---------- IndexedDB ---------- */
+  function openDB() {
+    return new Promise(function (res, rej) {
+      if (!window.indexedDB) { rej(new Error('IndexedDB nicht verfügbar')); return; }
+      var r;
+      try { r = indexedDB.open(DB_NAME, DB_VER); } catch (e) { rej(e); return; }
+      r.onupgradeneeded = function () {
+        var d = r.result;
+        if (!d.objectStoreNames.contains('plays')) d.createObjectStore('plays', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('items')) {
+          var s = d.createObjectStore('items', { keyPath: 'id' });
+          s.createIndex('playId', 'playId', { unique: false });
+        }
+      };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+      r.onblocked = function () { rej(new Error('Datenbank blockiert – andere Tabs schließen')); };
+    });
+  }
+  function cursorAll(source, range) {
+    return new Promise(function (res, rej) {
+      var out = [], r = range ? source.openCursor(range) : source.openCursor();
+      r.onsuccess = function () { var c = r.result; if (c) { out.push(c.value); c['continue'](); } else res(out); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  /* Notfall-Speicher im Arbeitsspeicher, falls IndexedDB verweigert wird */
+  var mem = null;
+  function memVals(o) { var out = [], k; for (k in o) if (o.hasOwnProperty(k)) out.push(o[k]); return out; }
+  function getAll(name) {
+    if (mem) return Promise.resolve(memVals(mem[name]));
+    return cursorAll(db.transaction(name, 'readonly').objectStore(name));
+  }
+  function itemsOf(playId) {
+    if (mem) return Promise.resolve(memVals(mem.items).filter(function (i) { return i.playId === playId; }));
+    var idx = db.transaction('items', 'readonly').objectStore('items').index('playId');
+    return cursorAll(idx, IDBKeyRange.only(playId));
+  }
+  function writeTx(name, fn) {
+    return new Promise(function (res, rej) {
+      var t = db.transaction(name, 'readwrite');
+      fn(t.objectStore(name));
+      t.oncomplete = function () { res(); };
+      t.onerror = function () { rej(t.error); };
+      t.onabort = function () { rej(t.error || new Error('Speichern abgebrochen (Speicher voll?)')); };
+    });
+  }
+  function put(name, obj) {
+    if (mem) { mem[name][obj.id] = obj; return Promise.resolve(); }
+    return writeTx(name, function (s) { s.put(obj); });
+  }
+  function del(name, id) {
+    if (mem) { delete mem[name][id]; return Promise.resolve(); }
+    return writeTx(name, function (s) { s['delete'](id); });
+  }
+  function deleteItemsOfPlay(playId) {
+    if (mem) { memVals(mem.items).forEach(function (i) { if (i.playId === playId) delete mem.items[i.id]; }); return Promise.resolve(); }
+    return writeTx('items', function (s) {
+      var r = s.index('playId').openCursor(IDBKeyRange.only(playId));
+      r.onsuccess = function () { var c = r.result; if (c) { c['delete'](); c['continue'](); } };
+    });
+  }
+  function requestPersist() {
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist()['catch'](function () {}); } catch (e) {}
+  }
+
+  /* ---------- Daten laden / rendern ---------- */
+  function loadPlays() {
+    return getAll('plays').then(function (ps) {
+      ps.sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); });
+      state.plays = ps;
+    });
+  }
+  function findPlay(id) { for (var i = 0; i < state.plays.length; i++) if (state.plays[i].id === id) return state.plays[i]; return null; }
+  function selectPlay(id) {
+    state.current = id ? findPlay(id) : null;
+    if (!state.current && state.plays.length) state.current = state.plays[0];
+    lsSet('sm_last', state.current ? state.current.id : '');
+    state.q = ''; $('search').value = '';
+    return loadItems().then(render);
+  }
+  function loadItems() {
+    if (!state.current) { state.items = []; return Promise.resolve(); }
+    return itemsOf(state.current.id).then(function (its) {
+      its.sort(function (a, b) { return b.updated - a.updated; });
+      state.items = its;
+    });
+  }
+  function render() {
+    renderPlaySelect();
+    var has = !!state.current;
+    $('empty').style.display = has ? 'none' : 'block';
+    $('playView').style.display = has ? 'block' : 'none';
+    if (!has) return;
+    $('playTitle').textContent = state.current.name;
+    var n = 0, p = 0, f = 0;
+    state.items.forEach(function (i) { if (i.type === 'note') n++; else if (i.type === 'photo') f++; else p++; });
+    $('playMeta').textContent = plural(n, 'Notiz', 'Notizen') + ' · ' + plural(p, 'PDF', 'PDFs') + ' · ' + plural(f, 'Foto', 'Fotos');
+    var chips = $('chips').getElementsByTagName('button');
+    for (var k = 0; k < chips.length; k++) chips[k].className = 'chip' + (chips[k].getAttribute('data-f') === state.filter ? ' on' : '');
+    renderList();
+    updateSaveBar();
+  }
+  function updateSaveBar() {
+    var b = $('saveBar'); b.innerHTML = '';
+    if (mem) {
+      b.className = 'savebar warn';
+      b.appendChild(el('span', null, '⚠ Nicht dauerhaft gespeichert – vor dem Schließen sichern!'));
+      b.appendChild(btn('Jetzt sichern', function () { exportData(true); }));
+      return;
+    }
+    var lb = +(lsGet('sm_lastBackup') || 0), days = lb ? Math.floor((Date.now() - lb) / 864e5) : 0;
+    var remind = state.items.length > 0 && (!lb || days >= 7);
+    var txt = '✓ Wird automatisch gespeichert';
+    if (remind) txt += ' · ' + (lb ? 'letzte Sicherung vor ' + days + ' Tagen' : 'noch keine Sicherung');
+    b.className = 'savebar' + (remind ? ' remind' : '');
+    b.appendChild(el('span', null, txt));
+    if (remind) b.appendChild(btn('Jetzt sichern', function () { exportData(true); }));
+  }
+  function renderPlaySelect() {
+    var s = $('playSel'); s.innerHTML = '';
+    if (!state.plays.length) { var o0 = el('option', null, '– kein Stück –'); o0.value = ''; s.appendChild(o0); s.disabled = true; return; }
+    s.disabled = false;
+    state.plays.forEach(function (p) {
+      var o = el('option', null, p.name); o.value = p.id;
+      if (state.current && p.id === state.current.id) o.selected = true;
+      s.appendChild(o);
+    });
+  }
+  function renderList() {
+    var list = $('list'); list.innerHTML = '';
+    var q = state.q.toLowerCase();
+    var shown = state.items.filter(function (i) {
+      if (state.filter !== 'all' && i.type !== state.filter) return false;
+      if (!q) return true;
+      return ((i.title || '') + ' ' + (i.text || '') + ' ' + (i.cat || '')).toLowerCase().indexOf(q) >= 0;
+    });
+    if (!shown.length) {
+      list.appendChild(el('div', 'hint', state.items.length ? 'Nichts gefunden.' : 'Noch leer. Lege eine Notiz an, lade ein PDF hoch oder mach ein Foto.'));
+      return;
+    }
+    shown.forEach(function (i) {
+      list.appendChild(i.type === 'note' ? noteCard(i) : i.type === 'photo' ? photoCard(i) : pdfCard(i));
+    });
+  }
+  function photoCard(i) {
+    var c = el('div', 'card photo'), m = el('div', 'card-main'), th = el('div', 'thumb'), tx = el('div', 'card-text'), top = el('div', 'card-top');
+    if (i.thumb) th.style.backgroundImage = 'url(' + i.thumb + ')';
+    top.appendChild(el('span', 'badge b-photo', 'FOTO'));
+    top.appendChild(el('span', null, fmtDate(i.created)));
+    tx.appendChild(top);
+    tx.appendChild(el('div', 'card-title', i.title || 'Foto'));
+    m.appendChild(th); m.appendChild(tx);
+    m.onclick = function () { openPhoto(i); };
+    c.appendChild(m);
+    return c;
+  }
+  function noteCard(i) {
+    var c = el('div', 'card note'), m = el('div', 'card-main'), top = el('div', 'card-top');
+    top.appendChild(el('span', 'badge b-note', 'NOTIZ'));
+    if (i.cat) top.appendChild(el('span', 'badge b-cat', i.cat));
+    top.appendChild(el('span', null, fmtDate(i.updated)));
+    m.appendChild(top);
+    m.appendChild(el('div', 'card-title', i.title || '(ohne Titel)'));
+    var sn = (i.text || '').replace(/\s+/g, ' ').trim();
+    if (sn) m.appendChild(el('div', 'snippet', sn.length > 160 ? sn.slice(0, 160) + '…' : sn));
+    m.onclick = function () { openEditor(i); };
+    c.appendChild(m);
+    return c;
+  }
+  function pdfCard(i) {
+    var c = el('div', 'card pdf'), m = el('div', 'card-main'), top = el('div', 'card-top');
+    top.appendChild(el('span', 'badge b-pdf', 'PDF'));
+    top.appendChild(el('span', null, fmtSize(i.size || 0)));
+    top.appendChild(el('span', null, fmtDate(i.updated)));
+    if (i.lastPage > 1) top.appendChild(el('span', null, 'zuletzt S. ' + i.lastPage));
+    m.appendChild(top);
+    m.appendChild(el('div', 'card-title', i.title || 'PDF'));
+    m.onclick = function () { openViewer(i); };
+    c.appendChild(m);
+    var a = el('div', 'card-acts');
+    a.appendChild(btn('Extern öffnen', function () { openExternal(i); }));
+    a.appendChild(btn('Umbenennen', function () { renamePdf(i); }));
+    a.appendChild(btn('Löschen', function () { deletePdf(i); }, 'btn small danger'));
+    c.appendChild(a);
+    return c;
+  }
+
+  /* ---------- Stücke ---------- */
+  function newPlay() {
+    askText('Neues Stück', '', 'Anlegen').then(function (n) {
+      if (!n) return;
+      var now = Date.now(), p = { id: uid(), name: n, created: now, updated: now };
+      return put('plays', p).then(loadPlays).then(function () { return selectPlay(p.id); })
+        .then(function () { toast('„' + p.name + '“ angelegt'); });
+    })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+  function renamePlay() {
+    var p = state.current; if (!p) return;
+    askText('Stück umbenennen', p.name, 'Speichern').then(function (n) {
+      if (!n) return;
+      p.name = n; p.updated = Date.now();
+      return put('plays', p).then(loadPlays).then(function () { return selectPlay(p.id); });
+    })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+  function deletePlay() {
+    var p = state.current; if (!p) return;
+    askConfirm('Stück löschen?', '„' + p.name + '“ mit allen ' + plural(state.items.length, 'Eintrag', 'Einträgen') + ' wird gelöscht.\nDas kann nicht rückgängig gemacht werden.')
+      .then(function (ok) {
+        if (!ok) return;
+        return deleteItemsOfPlay(p.id).then(function () { return del('plays', p.id); }).then(loadPlays)
+          .then(function () { return selectPlay(null); }).then(function () { toast('„' + p.name + '“ gelöscht'); });
+      })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+
+  /* ---------- PDFs ---------- */
+  function addPdfs(fileList) {
+    if (!state.current) return;
+    var files = [], k, added = 0, playId = state.current.id, chain = Promise.resolve();
+    for (k = 0; k < fileList.length; k++) files.push(fileList[k]);
+    if (!files.length) return;
+    toast('Speichere ' + plural(files.length, 'Datei', 'Dateien') + ' …');
+    files.forEach(function (f) {
+      chain = chain.then(function () {
+        if (!/pdf/i.test(f.type) && !/\.pdf$/i.test(f.name)) { toast(f.name + ' ist kein PDF'); return; }
+        var now = Date.now();
+        return put('items', {
+          id: uid(), playId: playId, type: 'pdf', title: f.name.replace(/\.pdf$/i, ''),
+          blob: new Blob([f], { type: 'application/pdf' }), size: f.size, lastPage: 1, created: now, updated: now
+        }).then(function () { added++; });
+      });
+    });
+    chain.then(function () { requestPersist(); return loadItems(); })
+      .then(function () { render(); if (added) toast(plural(added, 'PDF', 'PDFs') + ' gespeichert'); })
+      ['catch'](function (e) { toast('Speichern fehlgeschlagen: ' + errMsg(e)); loadItems().then(render); });
+  }
+  function renamePdf(i) {
+    askText('PDF umbenennen', i.title, 'Speichern').then(function (n) {
+      if (!n) return;
+      i.title = n; i.updated = Date.now();
+      return put('items', i).then(loadItems).then(render);
+    })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+  function deletePdf(i) {
+    askConfirm('PDF löschen?', '„' + i.title + '“ wird gelöscht.').then(function (ok) {
+      if (!ok) return;
+      return del('items', i.id).then(loadItems).then(render).then(function () { toast('PDF gelöscht'); });
+    })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+  function downloadBlob(blob, name) {
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 5000);
+  }
+  function openExternal(i) {
+    if (!i.blob) return;
+    downloadBlob(i.blob, /\.pdf$/i.test(i.title) ? i.title : i.title + '.pdf');
+  }
+
+  /* ---------- Fotos ---------- */
+  var MAX_PHOTO = 2400, THUMB = 240;
+  function scaleToCanvas(img, max) {
+    var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var r = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * r)); c.height = Math.max(1, Math.round(h * r));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
+  function canvasToBlob(c, cb) {
+    if (c.toBlob) c.toBlob(cb, 'image/jpeg', 0.85);
+    else cb(dataURLToBlob(c.toDataURL('image/jpeg', 0.85)));
+  }
+  function processImage(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        try {
+          var thumb = scaleToCanvas(img, THUMB).toDataURL('image/jpeg', 0.75);
+          canvasToBlob(scaleToCanvas(img, MAX_PHOTO), function (b) {
+            URL.revokeObjectURL(url);
+            res({ blob: b || file, thumb: thumb });
+          });
+        } catch (e) { URL.revokeObjectURL(url); res({ blob: file, thumb: '' }); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error(file.name + ' kann nicht gelesen werden')); };
+      img.src = url;
+    });
+  }
+  function addPhotos(fileList) {
+    if (!state.current || !fileList || !fileList.length) return;
+    var files = [], k, added = 0, playId = state.current.id, chain = Promise.resolve();
+    for (k = 0; k < fileList.length; k++) files.push(fileList[k]);
+    toast('Speichere ' + plural(files.length, 'Foto', 'Fotos') + ' …');
+    files.forEach(function (f) {
+      chain = chain.then(function () {
+        if (!/^image\//i.test(f.type) && !/\.(jpe?g|png|webp|gif)$/i.test(f.name)) { toast(f.name + ' ist kein Bild'); return; }
+        return processImage(f).then(function (r) {
+          var now = Date.now();
+          return put('items', {
+            id: uid(), playId: playId, type: 'photo', title: '', blob: r.blob, thumb: r.thumb,
+            size: r.blob.size, created: now, updated: now
+          });
+        }).then(function () { added++; });
+      });
+    });
+    chain.then(function () { requestPersist(); return loadItems(); })
+      .then(function () { render(); if (added) toast(plural(added, 'Foto', 'Fotos') + ' gespeichert'); })
+      ['catch'](function (e) { toast('Foto nicht gespeichert: ' + errMsg(e)); loadItems().then(render); });
+  }
+
+  var P = { list: [], idx: 0, url: null, timer: null };
+  function openPhoto(item) {
+    P.list = state.items.filter(function (i) { return i.type === 'photo'; });
+    P.idx = Math.max(0, P.list.indexOf(item));
+    openOverlay('photo');
+    showPhoto();
+  }
+  function showPhoto() {
+    var it = P.list[P.idx]; if (!it) return;
+    if (P.url) URL.revokeObjectURL(P.url);
+    P.url = URL.createObjectURL(it.blob);
+    $('pBody').className = 'p-body';
+    $('pImg').src = P.url;
+    $('pCaption').value = it.title || '';
+    $('pCount').textContent = (P.idx + 1) + ' / ' + P.list.length;
+    $('pStatus').textContent = fmtDate(it.created) + ' · ' + fmtSize(it.size || it.blob.size || 0);
+  }
+  function savePhotoCaption() {
+    clearTimeout(P.timer); P.timer = null;
+    var it = P.list[P.idx]; if (!it) return Promise.resolve();
+    var v = $('pCaption').value.trim();
+    if (v === (it.title || '')) return Promise.resolve();
+    it.title = v;
+    return put('items', it)['catch'](function (e) { toast('Beschreibung nicht gespeichert: ' + errMsg(e)); });
+  }
+  function photoGo(d) {
+    if (P.list.length < 2) return;
+    savePhotoCaption();
+    P.idx = (P.idx + d + P.list.length) % P.list.length;
+    showPhoto();
+  }
+  function deletePhoto() {
+    var it = P.list[P.idx]; if (!it) return;
+    askConfirm('Foto löschen?', 'Dieses Foto wird gelöscht.').then(function (ok) {
+      if (!ok) return;
+      clearTimeout(P.timer);
+      return del('items', it.id).then(function () {
+        var pos = P.list.indexOf(it); if (pos < 0) return;
+        P.idx = pos; P.list.splice(pos, 1);
+      toast('Foto gelöscht');
+      if (!P.list.length) { requestClose(); return; }
+        if (P.idx >= P.list.length) P.idx = P.list.length - 1;
+        showPhoto();
+      });
+    })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+  function savePhotoFile() {
+    var it = P.list[P.idx]; if (!it) return;
+    var base = (it.title || ('Foto ' + fmtDate(it.created))).replace(/[^a-z0-9äöüß _-]+/gi, '_');
+    downloadBlob(it.blob, base + '.jpg');
+  }
+  function finishPhoto() {
+    savePhotoCaption().then(function () {
+      if (P.url) { URL.revokeObjectURL(P.url); P.url = null; }
+      $('pImg').removeAttribute('src');
+      P.list = [];
+      return loadItems();
+    }).then(render);
+  }
+  (function photoSwipe() {
+    var sx = null, sy = 0, body = $('pBody');
+    body.addEventListener('touchstart', function (e) { if (e.touches.length === 1) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; } else sx = null; }, false);
+    body.addEventListener('touchend', function (e) {
+      if (sx === null || body.className.indexOf('full') >= 0 || !e.changedTouches.length) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) photoGo(dx < 0 ? 1 : -1);
+    }, false);
+  })();
+
+  /* ---------- Overlays + Zurück-Taste ---------- */
+  var ovStack = [];
+  function openOverlay(id) {
+    $(id).className = 'overlay open';
+    document.body.className = 'noscroll';
+    ovStack.push(id);
+    try { history.pushState({ ov: id }, ''); } catch (e) {}
+  }
+  function requestClose() {
+    if (!ovStack.length) return;
+    if (history.state && history.state.ov) history.back(); else handleClose();
+  }
+  function handleClose() {
+    var id = ovStack.pop(); if (!id) return;
+    if (id === 'editor') finishEditor(); else if (id === 'viewer') finishViewer(); else if (id === 'photo') finishPhoto();
+    $(id).className = 'overlay';
+    if (!ovStack.length) document.body.className = '';
+  }
+  window.addEventListener('popstate', function () { if (ovStack.length) handleClose(); });
+
+  /* ---------- Notiz-Editor ---------- */
+  var E = { item: null, isNew: false, timer: null };
+  function fillCats() {
+    var seen = {}, list = $('catList'); list.innerHTML = '';
+    state.items.forEach(function (i) { if (i.cat) seen[i.cat] = 1; });
+    DEFAULT_CATS.forEach(function (c) { seen[c] = 1; });
+    Object.keys(seen).sort().forEach(function (c) { var o = document.createElement('option'); o.value = c; list.appendChild(o); });
+  }
+  function openEditor(item) {
+    var isNew = !item;
+    if (isNew) { var now = Date.now(); item = { id: uid(), playId: state.current.id, type: 'note', title: '', cat: '', text: '', created: now, updated: now }; }
+    E.item = item; E.isNew = isNew;
+    $('eTitle').value = item.title || ''; $('eCat').value = item.cat || ''; $('eText').value = item.text || '';
+    $('eStatus').textContent = isNew ? 'Neue Notiz' : 'Gespeichert';
+    $('eDelete').style.display = isNew ? 'none' : '';
+    fillCats();
+    openOverlay('editor');
+    if (isNew) setTimeout(function () { $('eTitle').focus(); }, 80);
+  }
+  /* Sofort-Zwischenspeicher: jeder Tastendruck landet synchron im localStorage */
+  function writeDraft() {
+    var it = E.item; if (!it) return;
+    lsSet('sm_draft', JSON.stringify({ id: it.id, playId: it.playId, created: it.created,
+      title: $('eTitle').value, cat: $('eCat').value.trim(), text: $('eText').value }));
+  }
+  function clearDraft() { try { localStorage.removeItem('sm_draft'); } catch (e) {} }
+  function recoverDraft() {
+    var raw = lsGet('sm_draft'); if (!raw) return Promise.resolve(false);
+    var d; try { d = JSON.parse(raw); } catch (e) { clearDraft(); return Promise.resolve(false); }
+    if (!d || !d.id || !findPlay(d.playId) || (!(d.title || '').trim() && !(d.text || '').trim())) { clearDraft(); return Promise.resolve(false); }
+    return itemsOf(d.playId).then(function (its) {
+      var ex = null;
+      its.forEach(function (i) { if (i.id === d.id) ex = i; });
+      if (ex && ex.title === d.title && (ex.cat || '') === d.cat && ex.text === d.text) { clearDraft(); return false; }
+      var it = ex || { id: d.id, playId: d.playId, type: 'note', created: d.created || Date.now() };
+      it.title = d.title; it.cat = d.cat; it.text = d.text; it.updated = Date.now();
+      return put('items', it).then(function () { clearDraft(); return true; });
+    })['catch'](function () { return false; });
+  }
+  function editorChanged() {
+    writeDraft();
+    $('eStatus').textContent = 'Ungespeichert …';
+    clearTimeout(E.timer); E.timer = setTimeout(saveEditor, 500);
+  }
+  function saveEditor() {
+    clearTimeout(E.timer); E.timer = null;
+    var it = E.item; if (!it) return Promise.resolve();
+    var t = $('eTitle').value, c = $('eCat').value.trim(), x = $('eText').value;
+    if (E.isNew && !t.trim() && !x.trim()) { clearDraft(); return Promise.resolve(); }
+    if (!E.isNew && t === it.title && c === (it.cat || '') && x === it.text) { clearDraft(); $('eStatus').textContent = 'Gespeichert'; return Promise.resolve(); }
+    it.title = t; it.cat = c; it.text = x; it.updated = Date.now();
+    return put('items', it).then(function () {
+      if (E.item === it && $('eTitle').value === t && $('eText').value === x && $('eCat').value.trim() === c) clearDraft();
+      E.isNew = false; $('eDelete').style.display = '';
+      $('eStatus').textContent = 'Gespeichert ' + fmtTime(it.updated);
+    })['catch'](function (e) { $('eStatus').textContent = '⚠ NICHT gespeichert'; toast('Fehler: ' + errMsg(e)); });
+  }
+  function finishEditor() { saveEditor().then(function () { E.item = null; return loadItems(); }).then(render); }
+  function deleteNote() {
+    var it = E.item; if (!it) return;
+    askConfirm('Notiz löschen?', '„' + (it.title || 'ohne Titel') + '“ wird gelöscht.').then(function (ok) {
+      if (!ok || E.item !== it) return;
+      clearTimeout(E.timer);
+      return del('items', it.id).then(function () { clearDraft(); E.item = null; requestClose(); toast('Notiz gelöscht'); });
+    })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
+  }
+
+  /* ---------- PDF-Ansicht ---------- */
+  var V = { item: null, doc: null, page: 1, scale: 1, cur: 1, fit: true, busy: false, again: false };
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = PDFJS_SRC;
+      s.onload = function () {
+        if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; res(window.pdfjsLib); }
+        else rej(new Error('pdf.js fehlt'));
+      };
+      s.onerror = function () { rej(new Error('offline')); };
+      document.head.appendChild(s);
+    });
+  }
+  function blobToBuffer(b) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; r.readAsArrayBuffer(b);
+    });
+  }
+  function vMessage(text, withExt) {
+    var m = $('vMsg'); m.innerHTML = ''; m.appendChild(el('div', null, text));
+    if (withExt) m.appendChild(btn('PDF extern öffnen', function () { openExternal(V.item); }, 'btn primary'));
+    $('vCanvas').style.display = 'none';
+  }
+  function openViewer(item) {
+    V.item = item; V.doc = null; V.page = item.lastPage || 1; V.fit = true;
+    $('vTitle').textContent = item.title; $('vPage').textContent = '– / –';
+    vMessage('PDF wird geladen …');
+    openOverlay('viewer');
+    loadPdfJs().then(function (lib) {
+      return blobToBuffer(item.blob).then(function (buf) { return lib.getDocument({ data: buf }).promise; });
+    }).then(function (doc) {
+      if (V.item !== item) { doc.destroy(); return; }
+      V.doc = doc; if (V.page > doc.numPages) V.page = 1;
+      $('vMsg').innerHTML = ''; $('vCanvas').style.display = 'inline-block';
+      renderPage();
+    })['catch'](function (e) {
+      if (V.item !== item) return;
+      if (errMsg(e) === 'offline') vMessage('Der PDF-Leser konnte nicht geladen werden. Öffne die App einmal mit Internet. Bis dahin kannst du das PDF mit einer PDF-App öffnen:', true);
+      else vMessage('PDF konnte nicht angezeigt werden (' + errMsg(e) + ').', true);
+    });
+  }
+  function renderPage() {
+    if (!V.doc) return;
+    if (V.busy) { V.again = true; return; }
+    V.busy = true;
+    V.doc.getPage(V.page).then(function (p) {
+      var base = p.getViewport({ scale: 1 });
+      var avail = Math.max(200, $('vBody').clientWidth - 20);
+      var scale = V.fit ? avail / base.width : V.scale;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var vp = p.getViewport({ scale: scale * dpr }), c = $('vCanvas');
+      c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+      c.style.width = Math.floor(vp.width / dpr) + 'px'; c.style.height = Math.floor(vp.height / dpr) + 'px';
+      V.cur = scale;
+      return p.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }).then(function () {
+      V.busy = false;
+      $('vPage').textContent = V.page + ' / ' + V.doc.numPages;
+      if (V.again) { V.again = false; renderPage(); }
+    })['catch'](function (e) { V.busy = false; toast('Seite fehlerhaft: ' + errMsg(e)); });
+  }
+  function goPage(n) {
+    if (!V.doc) return;
+    n = Math.max(1, Math.min(V.doc.numPages, n));
+    if (n === V.page) return;
+    V.page = n; $('vBody').scrollTop = 0; renderPage();
+  }
+  function zoom(f) { if (!V.doc) return; V.fit = false; V.scale = Math.max(0.3, Math.min(5, V.cur * f)); renderPage(); }
+  function finishViewer() {
+    var it = V.item;
+    if (it && V.doc && it.lastPage !== V.page) { it.lastPage = V.page; put('items', it).then(loadItems).then(render); }
+    if (V.doc) { try { V.doc.destroy(); } catch (e) {} }
+    V.doc = null; V.item = null;
+    var c = $('vCanvas'); c.width = 1; c.height = 1;
+  }
+  (function swipe() {
+    var sx = 0, sy = 0, body = $('vBody');
+    body.addEventListener('touchstart', function (e) { if (e.touches.length === 1) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; } else sx = null; }, false);
+    body.addEventListener('touchend', function (e) {
+      if (sx === null || !V.fit || !e.changedTouches.length) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) goPage(V.page + (dx < 0 ? 1 : -1));
+    }, false);
+  })();
+
+  /* ---------- Sicherung ---------- */
+  function blobToDataURL(b) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; r.readAsDataURL(b);
+    });
+  }
+  function dataURLToBlob(d) {
+    var parts = d.split(','), mime = ((parts[0] || '').match(/:(.*?);/) || [])[1] || 'application/pdf';
+    var bin = atob(parts[1] || ''), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+  function exportData(all) {
+    var plays = all ? state.plays.slice() : (state.current ? [state.current] : []);
+    if (!plays.length) { toast('Nichts zu sichern'); return; }
+    toast('Sicherung wird erstellt …');
+    var outItems = [], chain = Promise.resolve();
+    plays.forEach(function (p) {
+      chain = chain.then(function () { return itemsOf(p.id); }).then(function (its) {
+        var c2 = Promise.resolve();
+        its.forEach(function (it) {
+          c2 = c2.then(function () {
+            var copy = {}, k;
+            for (k in it) if (it.hasOwnProperty(k) && k !== 'blob') copy[k] = it[k];
+            if (it.blob) return blobToDataURL(it.blob).then(function (d) { copy.data = d; outItems.push(copy); });
+            outItems.push(copy);
+          });
+        });
+        return c2;
+      });
+    });
+    chain.then(function () {
+      var json = JSON.stringify({ app: 'stueckmappe', version: 1, exported: Date.now(), plays: plays, items: outItems });
+      var d = new Date(), stamp = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+      var label = all ? 'alle' : plays[0].name.replace(/[^a-z0-9äöüß_-]+/gi, '_');
+      downloadBlob(new Blob([json], { type: 'application/json' }), 'stueckmappe-' + label + '-' + stamp + '.json');
+      lsSet('sm_lastBackup', String(Date.now()));
+      toast('Sicherung heruntergeladen');
+      if (state.current) updateSaveBar();
+    })['catch'](function (e) { toast('Sicherung fehlgeschlagen: ' + errMsg(e)); });
+  }
+  function importFile(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      var data;
+      try { data = JSON.parse(r.result); } catch (e) { toast('Datei ist keine gültige Sicherung'); return; }
+      if (!data || data.app !== 'stueckmappe' || !data.plays) { toast('Datei ist keine Stückmappe-Sicherung'); return; }
+      var items = data.items || [];
+      dialog({ title: 'Sicherung laden?', ok: 'Laden',
+        message: plural(data.plays.length, 'Stück', 'Stücke') + ', ' + plural(items.length, 'Eintrag', 'Einträge') +
+          '\n\nEinträge mit gleicher ID werden überschrieben, alles andere bleibt erhalten.' })
+        .then(function (ok) { if (ok) doImport(data, items); });
+    };
+    r.onerror = function () { toast('Datei konnte nicht gelesen werden'); };
+    r.readAsText(file);
+  }
+  function doImport(data, items) {
+      var chain = Promise.resolve();
+      data.plays.forEach(function (p) { chain = chain.then(function () { return put('plays', p); }); });
+      items.forEach(function (it) {
+        chain = chain.then(function () {
+          if (it.data) { it.blob = dataURLToBlob(it.data); delete it.data; }
+          return put('items', it);
+        });
+      });
+      chain.then(function () { requestPersist(); return loadPlays(); })
+        .then(function () { return selectPlay(data.plays[0].id); })
+        .then(function () { toast('Sicherung geladen'); })
+        ['catch'](function (e) { toast('Import fehlgeschlagen: ' + errMsg(e)); });
+  }
+  function showInfo() {
+    var lb = lsGet('sm_lastBackup');
+    var lines = ['Stücke: ' + state.plays.length, 'Letzte Sicherung: ' + (lb ? fmtDate(+lb) : 'noch nie')];
+    if (mem) lines.push('⚠ Nur vorübergehender Speicher – Inhalte gehen beim Schließen verloren!');
+    var finish = function () { showAlert('Speicher & Sicherung', lines.join('\n') + '\n\nDie Daten liegen nur in diesem Browser. Wenn du die Browserdaten löschst, sind sie weg – sichere regelmäßig über „Alles sichern“.'); };
+    if (!mem && navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(function (e) {
+        lines.push('Belegt: ' + fmtSize(e.usage || 0) + (e.quota ? ' von ca. ' + fmtSize(e.quota) : ''));
+        if (navigator.storage.persisted) return navigator.storage.persisted().then(function (p) { lines.push('Dauerhaft geschützt: ' + (p ? 'ja' : 'nein')); });
+      }).then(finish, finish);
+    } else finish();
+  }
+
+  /* ---------- Vollbild ---------- */
+  function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function isInstalledApp() {
+    try { return window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches; }
+    catch (e) { return false; }
+  }
+  function fsSupported() {
+    if (isInstalledApp()) return false; /* installierte App läuft schon im Vollbild */
+    var d = document.documentElement; return !!(d.requestFullscreen || d.webkitRequestFullscreen);
+  }
+  function enterFs() {
+    var d = document.documentElement;
+    try { var r = d.requestFullscreen ? d.requestFullscreen() : d.webkitRequestFullscreen(); if (r && r['catch']) r['catch'](function () {}); } catch (e) {}
+  }
+  function exitFs() {
+    try { var r = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen(); if (r && r['catch']) r['catch'](function () {}); } catch (e) {}
+  }
+  function toggleFs() {
+    if (fsEl()) { lsSet('sm_fs', '0'); exitFs(); }
+    else { lsSet('sm_fs', '1'); enterFs(); }
+  }
+  /* Browser erlauben Vollbild nur nach einer Berührung: beim ersten Tippen automatisch wieder einschalten */
+  var fsArmed = false;
+  function armFs() {
+    if (fsArmed || lsGet('sm_fs') !== '1' || fsEl()) return;
+    fsArmed = true;
+    var h = function (e) {
+      document.removeEventListener('click', h, true);
+      fsArmed = false;
+      if (e.target && e.target.id === 'btnFs') return;
+      if (lsGet('sm_fs') === '1' && !fsEl()) enterFs();
+    };
+    document.addEventListener('click', h, true);
+  }
+  function onFsChange() {
+    var on = !!fsEl(), b = $('btnFs');
+    b.className = 'btn icon' + (on ? ' on' : '');
+    b.title = on ? 'Vollbild beenden' : 'Vollbild';
+    if (!on) armFs();
+  }
+
+  /* ---------- Theme ---------- */
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    var m = document.querySelector('meta[name=theme-color]');
+    if (m) m.setAttribute('content', t === 'light' ? '#f4f3ef' : '#121214');
+    lsSet('sm_theme', t);
+  }
+
+  /* ---------- Events ---------- */
+  function bind() {
+    $('playSel').onchange = function () { selectPlay(this.value); };
+    $('btnNewPlay').onclick = newPlay;
+    if (fsSupported()) {
+      $('btnFs').onclick = toggleFs;
+      document.addEventListener('fullscreenchange', onFsChange);
+      document.addEventListener('webkitfullscreenchange', onFsChange);
+      armFs();
+    } else {
+      $('btnFs').style.display = 'none';
+    }
+    $('btnFirstPlay').onclick = newPlay;
+    $('btnNewNote').onclick = function () { openEditor(null); };
+    $('btnAddPdf').onclick = function () { $('pdfInput').click(); };
+    $('pdfInput').onchange = function () { addPdfs(this.files); this.value = ''; };
+    $('importInput').onchange = function () { if (this.files[0]) importFile(this.files[0]); this.value = ''; };
+    $('btnCamera').onclick = function () { $('cameraInput').click(); };
+    $('btnGallery').onclick = function () { $('galleryInput').click(); };
+    $('cameraInput').onchange = function () { addPhotos(this.files); this.value = ''; };
+    $('galleryInput').onchange = function () { addPhotos(this.files); this.value = ''; };
+
+    $('pBack').onclick = requestClose;
+    $('pPrev').onclick = function () { photoGo(-1); };
+    $('pNext').onclick = function () { photoGo(1); };
+    $('pDelete').onclick = deletePhoto;
+    $('pSave').onclick = savePhotoFile;
+    $('pImg').onclick = function () { var b = $('pBody'); b.className = b.className.indexOf('full') >= 0 ? 'p-body' : 'p-body full'; };
+    $('pCaption').oninput = function () { clearTimeout(P.timer); P.timer = setTimeout(savePhotoCaption, 700); };
+    $('search').oninput = function () { state.q = this.value; renderList(); };
+    $('chips').onclick = function (e) { var f = e.target.getAttribute('data-f'); if (f) { state.filter = f; render(); } };
+
+    var menu = $('menu');
+    $('btnMenu').onclick = function (e) { e.stopPropagation(); menu.className = menu.className.indexOf('open') >= 0 ? 'menu' : 'menu open'; };
+    document.addEventListener('click', function (e) { if (!menu.contains(e.target)) menu.className = 'menu'; });
+    menu.onclick = function (e) {
+      var act = e.target.getAttribute('data-act'); if (!act) return;
+      menu.className = 'menu';
+      if ((act === 'rename' || act === 'delete' || act === 'exportOne') && !state.current) { toast('Erst ein Stück anlegen'); return; }
+      if (act === 'rename') renamePlay();
+      else if (act === 'delete') deletePlay();
+      else if (act === 'exportOne') exportData(false);
+      else if (act === 'exportAll') exportData(true);
+      else if (act === 'import') $('importInput').click();
+      else if (act === 'theme') applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+      else if (act === 'info') showInfo();
+    };
+
+    $('eBack').onclick = requestClose;
+    $('eDelete').onclick = deleteNote;
+    $('eTitle').oninput = editorChanged;
+    $('eCat').oninput = editorChanged;
+    $('eText').oninput = editorChanged;
+
+    $('vBack').onclick = requestClose;
+    $('vExt').onclick = function () { if (V.item) openExternal(V.item); };
+    $('vPrev').onclick = function () { goPage(V.page - 1); };
+    $('vNext').onclick = function () { goPage(V.page + 1); };
+    $('vIn').onclick = function () { zoom(1.25); };
+    $('vOut').onclick = function () { zoom(0.8); };
+    $('vFit').onclick = function () { V.fit = true; renderPage(); };
+    $('vPage').onclick = function () {
+      if (!V.doc) return;
+      dialog({ title: 'Zu Seite springen (1–' + V.doc.numPages + ')', input: V.page, number: true, ok: 'Los' })
+        .then(function (v) { var n = parseInt(v, 10); if (n) goPage(n); });
+    };
+
+    $('dlgOk').onclick = function () { closeDialog(true); };
+    $('dlgCancel').onclick = function () { closeDialog(false); };
+    $('dlg').onclick = function (e) { if (e.target === this && $('dlgCancel').style.display !== 'none') closeDialog(false); };
+    $('dlgInput').onkeydown = function (e) { if (e.keyCode === 13) { e.preventDefault(); closeDialog(true); } };
+
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (V.doc && V.fit) renderPage(); }, 250); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden) { if (E.item) saveEditor(); if (P.list.length) savePhotoCaption(); } });
+    window.addEventListener('pagehide', function () { if (E.item) saveEditor(); if (P.list.length) savePhotoCaption(); });
+  }
+
+  /* ---------- Offline-Fähigkeit (Service Worker) ---------- */
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', function () {
+      var hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        try { reg.update(); } catch (e) {}
+      })['catch'](function () {});
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (hadController) toast('Neue Version installiert – beim nächsten Öffnen aktiv');
+      });
+    });
+  }
+
+  /* ---------- Start ---------- */
+  applyTheme(lsGet('sm_theme') || 'dark');
+  bind();
+  openDB().then(function (d) { db = d; requestPersist(); return loadPlays(); })
+    .then(recoverDraft)
+    .then(function (recovered) {
+      return selectPlay(lsGet('sm_last')).then(function () { if (recovered) toast('Ungespeicherte Notiz wiederhergestellt'); });
+    })
+    ['catch'](function (e) {
+      mem = { plays: {}, items: {} };
+      $('fatal').style.display = 'block';
+      $('fatalMsg').textContent = errMsg(e);
+      loadPlays().then(function () { return selectPlay(null); });
+    });
+})();
+</script>
+</body>
+</html>
