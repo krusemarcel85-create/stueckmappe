@@ -41,7 +41,19 @@ html[data-mode="edit"] .top{border-bottom:2px solid var(--accent)}
 .top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;padding:8px 10px;
   background:var(--panel);border-bottom:1px solid var(--line)}
 .brand{font-weight:700;letter-spacing:.3px;margin-right:10px;white-space:nowrap;color:var(--accent)}
-.top select{flex:1;min-width:0;height:44px;padding:0 10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+/* Eigene Stückauswahl (statt Android-Auswahlfenster, das den Vollbildmodus unterbricht) */
+.playbtn{flex:1;min-width:0;height:44px;display:flex;align-items:center;padding:0 12px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:10px;text-align:left;font-weight:600}
+.playbtn:active{opacity:.7}
+.playbtn:disabled{color:var(--muted);font-weight:400}
+.playbtn .pname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playbtn .caret{margin-left:8px;color:var(--muted);font-size:14px}
+.menu.playlist{left:10px;right:auto;min-width:260px;max-width:calc(100% - 20px)}
+.menu.playlist button{display:flex;align-items:center}
+.menu.playlist button .pn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu.playlist button.cur{background:var(--panel2);font-weight:700}
+.menu.playlist button.cur .ck{color:var(--accent);margin-left:10px}
+.playlist .plhead{padding:8px 14px 4px;color:var(--muted);font-size:13px}
 .top .btn{margin-left:8px}
 
 .btn{display:inline-block;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);
@@ -173,7 +185,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
 
 <header class="top">
   <span class="brand">🎭 Stückmappe</span>
-  <select id="playSel" aria-label="Stück wählen"></select>
+  <button class="playbtn" id="playBtn" type="button" aria-label="Stück wählen"><span class="pname" id="playName"></span><span class="caret">▼</span></button>
   <button class="btn icon primary edit-only" id="btnNewPlay" type="button" title="Neues Stück">＋</button>
   <button class="btn icon" id="btnFs" type="button" title="Vollbild">⛶</button>
   <button class="btn icon" id="btnMenu" type="button" title="Menü">⋮</button>
@@ -182,6 +194,8 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     <button class="btn small" type="button" id="btnEditDone">✓ Fertig</button>
   </div>
 </header>
+
+<div class="menu playlist" id="playList"></div>
 
 <div class="menu" id="menu">
   <button type="button" data-act="edit" class="view-only"><b>✏️ Bearbeiten</b></button>
@@ -503,14 +517,35 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     if (remind) b.appendChild(btn('Jetzt sichern', function () { exportData(true); }));
   }
   function renderPlaySelect() {
-    var s = $('playSel'); s.innerHTML = '';
-    if (!state.plays.length) { var o0 = el('option', null, '– kein Stück –'); o0.value = ''; s.appendChild(o0); s.disabled = true; return; }
-    s.disabled = false;
+    var has = state.plays.length > 0;
+    $('playName').textContent = has && state.current ? state.current.name : '– kein Stück –';
+    $('playBtn').disabled = !has;
+  }
+  function fillPlayList() {
+    var l = $('playList'); l.innerHTML = '';
+    l.appendChild(el('div', 'plhead', plural(state.plays.length, 'Stück', 'Stücke')));
     state.plays.forEach(function (p) {
-      var o = el('option', null, p.name); o.value = p.id;
-      if (state.current && p.id === state.current.id) o.selected = true;
-      s.appendChild(o);
+      var cur = state.current && p.id === state.current.id;
+      var b = el('button', cur ? 'cur' : null); b.type = 'button';
+      b.appendChild(el('span', 'pn', p.name));
+      if (cur) b.appendChild(el('span', 'ck', '✓'));
+      b.onclick = function () { closePopups(); if (!cur) selectPlay(p.id); };
+      l.appendChild(b);
     });
+  }
+  /* Aufklappmenüs direkt unter der Kopfzeile platzieren (Kopfzeile ist im Bearbeiten-Modus höher) */
+  function placePopup(p) {
+    var h = document.querySelector('.top');
+    p.style.top = Math.round((h ? h.getBoundingClientRect().bottom : 60) + 4) + 'px';
+  }
+  function closePopups() { $('menu').className = 'menu'; $('playList').className = 'menu playlist'; }
+  function togglePopup(id) {
+    var p = $(id), open = p.className.indexOf('open') >= 0;
+    closePopups();
+    if (open) return;
+    if (id === 'playList') fillPlayList();
+    placePopup(p);
+    p.className += ' open';
   }
   function renderList() {
     var list = $('list'); list.innerHTML = '';
@@ -1103,7 +1138,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
 
   /* ---------- Events ---------- */
   function bind() {
-    $('playSel').onchange = function () { selectPlay(this.value); };
+    $('playBtn').onclick = function (e) { e.stopPropagation(); togglePopup('playList'); };
     $('btnNewPlay').onclick = newPlay;
     if (fsSupported()) {
       $('btnFs').onclick = toggleFs;
@@ -1137,8 +1172,10 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     $('chips').onclick = function (e) { var f = e.target.getAttribute('data-f'); if (f) { state.filter = f; render(); } };
 
     var menu = $('menu');
-    $('btnMenu').onclick = function (e) { e.stopPropagation(); menu.className = menu.className.indexOf('open') >= 0 ? 'menu' : 'menu open'; };
-    document.addEventListener('click', function (e) { if (!menu.contains(e.target)) menu.className = 'menu'; });
+    $('btnMenu').onclick = function (e) { e.stopPropagation(); togglePopup('menu'); };
+    document.addEventListener('click', function (e) {
+      if (!menu.contains(e.target) && !$('playList').contains(e.target)) closePopups();
+    });
     menu.onclick = function (e) {
       var t = e.target;
       while (t && t !== menu && !t.getAttribute('data-act')) t = t.parentNode;
