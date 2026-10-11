@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de" data-theme="dark" data-mode="view">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -28,7 +28,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 
 /* Kopfzeile */
-.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;padding:8px 10px;
+/* Ansehen / Bearbeiten */
+html[data-mode="view"] .edit-only{display:none !important}
+html[data-mode="edit"] .view-only{display:none !important}
+.editstrip{flex-basis:100%;display:flex;align-items:center;margin-top:8px;padding:6px 10px;border-radius:10px;
+  background:var(--accent);color:var(--accent-text);font-weight:600;font-size:15px}
+.editstrip span{flex:1;min-width:0}
+.editstrip .btn{min-height:38px;background:var(--accent-text);color:var(--accent);border-color:var(--accent-text)}
+html[data-mode="edit"] .top{border-bottom:2px solid var(--accent)}
+.ed-body input[readonly],.ed-body textarea[readonly],#pCaption[readonly]{border-color:transparent;background:transparent;padding-left:2px}
+.ed-body textarea[readonly]{font-size:18px}
+.top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;padding:8px 10px;
   background:var(--panel);border-bottom:1px solid var(--line)}
 .brand{font-weight:700;letter-spacing:.3px;margin-right:10px;white-space:nowrap;color:var(--accent)}
 .top select{flex:1;min-width:0;height:44px;padding:0 10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
@@ -164,18 +174,25 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
 <header class="top">
   <span class="brand">🎭 Stückmappe</span>
   <select id="playSel" aria-label="Stück wählen"></select>
-  <button class="btn icon primary" id="btnNewPlay" type="button" title="Neues Stück">＋</button>
+  <button class="btn icon primary edit-only" id="btnNewPlay" type="button" title="Neues Stück">＋</button>
   <button class="btn icon" id="btnFs" type="button" title="Vollbild">⛶</button>
   <button class="btn icon" id="btnMenu" type="button" title="Menü">⋮</button>
+  <div class="editstrip edit-only">
+    <span>✏️ Bearbeitungsmodus – wird automatisch gespeichert</span>
+    <button class="btn small" type="button" id="btnEditDone">✓ Fertig</button>
+  </div>
 </header>
 
 <div class="menu" id="menu">
-  <button type="button" data-act="rename">✏️ Stück umbenennen</button>
-  <button type="button" data-act="delete" class="danger">🗑️ Stück löschen</button>
+  <button type="button" data-act="edit" class="view-only"><b>✏️ Bearbeiten</b></button>
+  <button type="button" data-act="edit" class="edit-only"><b>✓ Bearbeiten beenden</b></button>
   <hr>
+  <button type="button" data-act="rename" class="edit-only">✏️ Stück umbenennen</button>
+  <button type="button" data-act="delete" class="danger edit-only">🗑️ Stück löschen</button>
+  <hr class="edit-only">
   <button type="button" data-act="exportOne">💾 Dieses Stück sichern</button>
   <button type="button" data-act="exportAll">💾 Alles sichern</button>
-  <button type="button" data-act="import">📂 Sicherung laden</button>
+  <button type="button" data-act="import" class="edit-only">📂 Sicherung laden</button>
   <hr>
   <button type="button" data-act="theme">🌓 Hell / Dunkel</button>
   <button type="button" data-act="info">ℹ️ Speicher &amp; Sicherung</button>
@@ -191,7 +208,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
 <main>
   <div class="empty" id="empty" style="display:none">
     <h2>Noch keine Stücke</h2>
-    <p>Lege dein erstes Stück an. Danach kannst du Notizen schreiben und PDFs hochladen.</p>
+    <p>Lege dein erstes Stück an. Danach kannst du Notizen schreiben, PDFs hochladen und Fotos machen.</p>
     <button class="btn primary" id="btnFirstPlay" type="button">＋ Erstes Stück anlegen</button>
   </div>
 
@@ -202,10 +219,10 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
       <div class="savebar" id="saveBar"></div>
     </div>
     <div class="toolbar">
-      <button class="btn primary" id="btnNewNote" type="button">＋ Notiz</button>
-      <button class="btn primary" id="btnAddPdf" type="button">＋ PDF</button>
-      <button class="btn primary" id="btnCamera" type="button">📷 Kamera</button>
-      <button class="btn" id="btnGallery" type="button">🖼️ Galerie</button>
+      <button class="btn primary edit-only" id="btnNewNote" type="button">＋ Notiz</button>
+      <button class="btn primary edit-only" id="btnAddPdf" type="button">＋ PDF</button>
+      <button class="btn primary edit-only" id="btnCamera" type="button">📷 Kamera</button>
+      <button class="btn edit-only" id="btnGallery" type="button">🖼️ Galerie</button>
       <input type="search" id="search" placeholder="Suchen …" autocomplete="off">
     </div>
     <div class="chips" id="chips">
@@ -228,8 +245,9 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
   <div class="bar">
     <button class="btn" type="button" id="pBack">‹ Zurück</button>
     <span class="grow status" id="pStatus"></span>
-    <button class="btn" type="button" id="pSave">Speichern</button>
-    <button class="btn danger" type="button" id="pDelete">Löschen</button>
+    <button class="btn" type="button" id="pSave">⬇ Herunterladen</button>
+    <button class="btn view-only" type="button" id="pEdit">✏️ Bearbeiten</button>
+    <button class="btn danger edit-only" type="button" id="pDelete">Löschen</button>
   </div>
   <div class="p-body" id="pBody"><img id="pImg" alt=""></div>
   <div class="p-foot">
@@ -247,7 +265,8 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
   <div class="bar">
     <button class="btn" type="button" id="eBack">‹ Zurück</button>
     <span class="grow status" id="eStatus"></span>
-    <button class="btn danger" type="button" id="eDelete">Löschen</button>
+    <button class="btn view-only" type="button" id="eEdit">✏️ Bearbeiten</button>
+    <button class="btn danger edit-only" type="button" id="eDelete">Löschen</button>
   </div>
   <div class="ed-body">
     <input id="eTitle" type="text" placeholder="Titel">
@@ -546,14 +565,41 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     c.appendChild(m);
     var a = el('div', 'card-acts');
     a.appendChild(btn('Extern öffnen', function () { openExternal(i); }));
-    a.appendChild(btn('Umbenennen', function () { renamePdf(i); }));
-    a.appendChild(btn('Löschen', function () { deletePdf(i); }, 'btn small danger'));
+    a.appendChild(btn('Umbenennen', function () { renamePdf(i); }, 'btn small edit-only'));
+    a.appendChild(btn('Löschen', function () { deletePdf(i); }, 'btn small danger edit-only'));
     c.appendChild(a);
     return c;
   }
 
+  /* ---------- Ansehen / Bearbeiten ---------- */
+  var editMode = false;
+  function canEdit() {
+    if (editMode) return true;
+    toast('Nur Ansicht – zum Ändern ⋮ → Bearbeiten');
+    return false;
+  }
+  function applyReadonly() {
+    var ro = !editMode;
+    ['eTitle', 'eCat', 'eText', 'pCaption'].forEach(function (id) { $(id).readOnly = ro; });
+    $('eCat').placeholder = ro ? '' : 'Kategorie (z. B. Licht, Ton, Probe)';
+    $('eTitle').placeholder = ro ? '' : 'Titel';
+    $('eText').placeholder = ro ? '' : 'Notiz …';
+    $('pCaption').placeholder = ro ? '' : 'Beschreibung (z. B. Lichtstimmung Szene 3)';
+    if (E.item) {
+      $('eStatus').textContent = ro ? '👁️ Nur ansehen' : (E.isNew ? 'Neue Notiz' : 'Bearbeiten');
+      $('eCat').style.display = (ro && !$('eCat').value) ? 'none' : '';
+    }
+    if (P.list.length) $('pCaption').style.display = (ro && !$('pCaption').value) ? 'none' : '';
+  }
+  function setEditMode(on) {
+    editMode = !!on;
+    document.documentElement.setAttribute('data-mode', editMode ? 'edit' : 'view');
+    applyReadonly();
+  }
+
   /* ---------- Stücke ---------- */
   function newPlay() {
+    if (!canEdit()) return;
     askText('Neues Stück', '', 'Anlegen').then(function (n) {
       if (!n) return;
       var now = Date.now(), p = { id: uid(), name: n, created: now, updated: now };
@@ -562,7 +608,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
   }
   function renamePlay() {
-    var p = state.current; if (!p) return;
+    var p = state.current; if (!p || !canEdit()) return;
     askText('Stück umbenennen', p.name, 'Speichern').then(function (n) {
       if (!n) return;
       p.name = n; p.updated = Date.now();
@@ -570,7 +616,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
   }
   function deletePlay() {
-    var p = state.current; if (!p) return;
+    var p = state.current; if (!p || !canEdit()) return;
     askConfirm('Stück löschen?', '„' + p.name + '“ mit allen ' + plural(state.items.length, 'Eintrag', 'Einträgen') + ' wird gelöscht.\nDas kann nicht rückgängig gemacht werden.')
       .then(function (ok) {
         if (!ok) return;
@@ -581,7 +627,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
 
   /* ---------- PDFs ---------- */
   function addPdfs(fileList) {
-    if (!state.current) return;
+    if (!state.current || !canEdit()) return;
     var files = [], k, added = 0, playId = state.current.id, chain = Promise.resolve();
     for (k = 0; k < fileList.length; k++) files.push(fileList[k]);
     if (!files.length) return;
@@ -601,6 +647,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
       ['catch'](function (e) { toast('Speichern fehlgeschlagen: ' + errMsg(e)); loadItems().then(render); });
   }
   function renamePdf(i) {
+    if (!canEdit()) return;
     askText('PDF umbenennen', i.title, 'Speichern').then(function (n) {
       if (!n) return;
       i.title = n; i.updated = Date.now();
@@ -608,6 +655,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     })['catch'](function (e) { toast('Fehler: ' + errMsg(e)); });
   }
   function deletePdf(i) {
+    if (!canEdit()) return;
     askConfirm('PDF löschen?', '„' + i.title + '“ wird gelöscht.').then(function (ok) {
       if (!ok) return;
       return del('items', i.id).then(loadItems).then(render).then(function () { toast('PDF gelöscht'); });
@@ -654,7 +702,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     });
   }
   function addPhotos(fileList) {
-    if (!state.current || !fileList || !fileList.length) return;
+    if (!state.current || !fileList || !fileList.length || !canEdit()) return;
     var files = [], k, added = 0, playId = state.current.id, chain = Promise.resolve();
     for (k = 0; k < fileList.length; k++) files.push(fileList[k]);
     toast('Speichere ' + plural(files.length, 'Foto', 'Fotos') + ' …');
@@ -691,10 +739,11 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     $('pCaption').value = it.title || '';
     $('pCount').textContent = (P.idx + 1) + ' / ' + P.list.length;
     $('pStatus').textContent = fmtDate(it.created) + ' · ' + fmtSize(it.size || it.blob.size || 0);
+    applyReadonly();
   }
   function savePhotoCaption() {
     clearTimeout(P.timer); P.timer = null;
-    var it = P.list[P.idx]; if (!it) return Promise.resolve();
+    var it = P.list[P.idx]; if (!it || !editMode) return Promise.resolve();
     var v = $('pCaption').value.trim();
     if (v === (it.title || '')) return Promise.resolve();
     it.title = v;
@@ -707,7 +756,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     showPhoto();
   }
   function deletePhoto() {
-    var it = P.list[P.idx]; if (!it) return;
+    var it = P.list[P.idx]; if (!it || !canEdit()) return;
     askConfirm('Foto löschen?', 'Dieses Foto wird gelöscht.').then(function (ok) {
       if (!ok) return;
       clearTimeout(P.timer);
@@ -748,7 +797,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
   var ovStack = [];
   function openOverlay(id) {
     $(id).className = 'overlay open';
-    document.body.className = 'noscroll';
+    document.body.classList.add('noscroll');
     ovStack.push(id);
     try { history.pushState({ ov: id }, ''); } catch (e) {}
   }
@@ -760,7 +809,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     var id = ovStack.pop(); if (!id) return;
     if (id === 'editor') finishEditor(); else if (id === 'viewer') finishViewer(); else if (id === 'photo') finishPhoto();
     $(id).className = 'overlay';
-    if (!ovStack.length) document.body.className = '';
+    if (!ovStack.length) document.body.classList.remove('noscroll');
   }
   window.addEventListener('popstate', function () { if (ovStack.length) handleClose(); });
 
@@ -774,12 +823,14 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
   }
   function openEditor(item) {
     var isNew = !item;
+    if (isNew && !canEdit()) return;
     if (isNew) { var now = Date.now(); item = { id: uid(), playId: state.current.id, type: 'note', title: '', cat: '', text: '', created: now, updated: now }; }
     E.item = item; E.isNew = isNew;
     $('eTitle').value = item.title || ''; $('eCat').value = item.cat || ''; $('eText').value = item.text || '';
     $('eStatus').textContent = isNew ? 'Neue Notiz' : 'Gespeichert';
     $('eDelete').style.display = isNew ? 'none' : '';
     fillCats();
+    applyReadonly();
     openOverlay('editor');
     if (isNew) setTimeout(function () { $('eTitle').focus(); }, 80);
   }
@@ -804,13 +855,14 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     })['catch'](function () { return false; });
   }
   function editorChanged() {
+    if (!editMode) return;
     writeDraft();
     $('eStatus').textContent = 'Ungespeichert …';
     clearTimeout(E.timer); E.timer = setTimeout(saveEditor, 500);
   }
   function saveEditor() {
     clearTimeout(E.timer); E.timer = null;
-    var it = E.item; if (!it) return Promise.resolve();
+    var it = E.item; if (!it || !editMode) return Promise.resolve();
     var t = $('eTitle').value, c = $('eCat').value.trim(), x = $('eText').value;
     if (E.isNew && !t.trim() && !x.trim()) { clearDraft(); return Promise.resolve(); }
     if (!E.isNew && t === it.title && c === (it.cat || '') && x === it.text) { clearDraft(); $('eStatus').textContent = 'Gespeichert'; return Promise.resolve(); }
@@ -823,7 +875,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
   }
   function finishEditor() { saveEditor().then(function () { E.item = null; return loadItems(); }).then(render); }
   function deleteNote() {
-    var it = E.item; if (!it) return;
+    var it = E.item; if (!it || !canEdit()) return;
     askConfirm('Notiz löschen?', '„' + (it.title || 'ohne Titel') + '“ wird gelöscht.').then(function (ok) {
       if (!ok || E.item !== it) return;
       clearTimeout(E.timer);
@@ -1061,7 +1113,10 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     } else {
       $('btnFs').style.display = 'none';
     }
-    $('btnFirstPlay').onclick = newPlay;
+    $('btnFirstPlay').onclick = function () { if (!editMode) setEditMode(true); newPlay(); };
+    $('btnEditDone').onclick = function () { setEditMode(false); toast('👁️ Nur ansehen – alles gespeichert'); };
+    $('eEdit').onclick = function () { setEditMode(true); setTimeout(function () { try { $('eText').focus(); } catch (e) {} }, 60); };
+    $('pEdit').onclick = function () { setEditMode(true); };
     $('btnNewNote').onclick = function () { openEditor(null); };
     $('btnAddPdf').onclick = function () { $('pdfInput').click(); };
     $('pdfInput').onchange = function () { addPdfs(this.files); this.value = ''; };
@@ -1085,8 +1140,16 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
     $('btnMenu').onclick = function (e) { e.stopPropagation(); menu.className = menu.className.indexOf('open') >= 0 ? 'menu' : 'menu open'; };
     document.addEventListener('click', function (e) { if (!menu.contains(e.target)) menu.className = 'menu'; });
     menu.onclick = function (e) {
-      var act = e.target.getAttribute('data-act'); if (!act) return;
+      var t = e.target;
+      while (t && t !== menu && !t.getAttribute('data-act')) t = t.parentNode;
+      var act = t && t !== menu ? t.getAttribute('data-act') : null; if (!act) return;
       menu.className = 'menu';
+      if (act === 'edit') {
+        setEditMode(!editMode);
+        toast(editMode ? '✏️ Bearbeiten an – du kannst jetzt hinzufügen und ändern' : '👁️ Nur ansehen – alles gespeichert');
+        return;
+      }
+      if ((act === 'rename' || act === 'delete' || act === 'import') && !canEdit()) return;
       if ((act === 'rename' || act === 'delete' || act === 'exportOne') && !state.current) { toast('Erst ein Stück anlegen'); return; }
       if (act === 'rename') renamePlay();
       else if (act === 'delete') deletePlay();
@@ -1142,6 +1205,7 @@ html[data-theme="light"] .v-body{background:#9a9aa0}
 
   /* ---------- Start ---------- */
   applyTheme(lsGet('sm_theme') || 'dark');
+  setEditMode(false); /* App startet immer im Modus „Nur ansehen“ */
   bind();
   openDB().then(function (d) { db = d; requestPersist(); return loadPlays(); })
     .then(recoverDraft)

@@ -1,6 +1,6 @@
 /* Stückmappe – Service Worker: macht die App offline-fähig.
    Bei jeder neuen Version die Nummer in VERSION erhöhen. */
-var VERSION = 'stueckmappe-v1';
+var VERSION = 'stueckmappe-v2';
 var FILES = [
   './',
   'index.html',
